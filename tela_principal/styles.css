@@ -1,0 +1,993 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f0f2f5;
+    margin: 0;
+    padding: 0;
+}
+header{
+     background: #1e293b;
+    color: white;
+    justify-content: space-between;
+
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 2;
+    height: 50px;
+}
+#txttitulo{
+    text-align: left;
+    margin-left: 60px;
+    margin-top: 7px;
+    font-size: 30PX;
+}
+/*estilizaçao campo de busca */
+.buscarSer {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  
+}
+
+#buscarServico{
+    padding: 5px ;
+    width: 350px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+/* Container à direita do header */
+.header-right {
+    position: absolute;
+    top: 105%;
+    right: 20px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Logo circular */
+.imglogo {
+    width: 70px;
+    height: 70px;
+    border-radius: 60%; /* círculo */
+    object-fit: cover;
+    border: 2px solid #3498db; /* borda azul */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+
+    margin-top: -100px;
+    margin-right: 30px;
+}
+
+
+/* Box de login/cadastro */
+.box {
+  cursor: pointer;
+  margin-top: -50px;
+}
+
+.box img {
+  width: 30px;
+  height: 30px;
+  filter: invert(1);
+}
+
+/* Campo de busca */
+.buscarSer input {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+/* Menu de opções */
+.menuOpcoes {
+  position: absolute;
+  top: 90px; /* 🟢 logo abaixo das barrinhas */
+  left: 10px;   /* 🟢 alinha com as barrinhas */
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 160px; /* largura mínima pro menu não ficar muito estreito */
+}
+
+.menuOpcoes a {
+  color: #1e293b;
+  text-decoration: none;
+  padding: 10px 20px;
+  display: block;
+  transition: background 0.3s;
+}
+
+.menuOpcoes a:hover {
+  background: #e2e8f0;
+}
+
+/*menu de opçoes*/
+.user-menu-wrapper {
+  position: absolute;
+  top: 10px;
+  right: 1330px; /* distancia da borda direita */
+}
+
+
+/* botão (barrinhas) */
+.menu-trigger-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.menu-trigger-icon {
+  font-size: 28px;
+  color: white; /* muda conforme o header */
+}
+
+/* container das opções */
+.user-options-container {
+  position: absolute;
+  top: 100%; /* aparece logo abaixo do botão */
+  left: 0;   /* alinhado com o botão */
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
+  padding: 10px 0;
+  display: none;
+  min-width: 200px;
+  z-index: 1000; /* garante que fique na frente */
+}
+
+/* links do menu */
+
+.menu-option-link {
+  align-items: center;
+  padding: 10px 15px;
+  background-color: rgb(10, 10, 54);
+  color: #333;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.menu-option-link:hover {
+  background: #1b1b1b;
+}
+
+/* ícones */
+.option-icon {
+  font-size: 20px;
+  color: #333;
+}
+
+/* divisor */
+.menu-divider-line {
+  height: 1px;
+  background: #ddd;
+  margin: 8px 0;
+}
+
+/* logout em vermelho */
+.logout-option .option-icon,
+.logout-option .option-text {
+  color: #ffffff;
+}
+
+
+/*estilizaçao quadro das avaliaçoes*/
+.quadroAva {
+  background: #f5f5f5;
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 25px;
+  margin-top: 40px;
+  border-radius: 12px;
+  position: relative;
+  z-index: 1;
+  height: 100px;
+}
+
+.quadroAva .quad-item {
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  text-align: center;
+  width: 200px;
+}
+
+/* === Quadro de informações da empresa === */
+
+
+/* === Footer corrigido === */
+/* === ISOLAR O FOOTER DO QUADRO DE AVALIAÇÕES === */
+.site-footer {
+  position: relative !important;
+  background: #1e293b !important;
+  color: white !important;
+  width: 100% !important;
+  margin-top: 40px !important;
+  padding: 30px 15px !important;
+  border: none !important;
+  display: block !important;
+}
+
+.site-footer .footer-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  text-align: left;
+}
+
+.site-footer .footer-container h3,
+.site-footer .footer-container h4 {
+  color: #ffcc66;
+}
+
+.site-footer .footer-bottom {
+  text-align: center;
+  margin-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  padding-top: 10px;
+  font-size: 0.9rem;
+}
+
+.site-footer a {
+  color: #ffcc66;
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: #fff;
+}
+
+
+
+
+
+
+.quad-item i {
+    font-size: 28px;
+    margin-bottom: 8px;
+    color: #0f172a;
+}
+
+.quad-item .label {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.quad-item .value {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 4px;
+}
+
+.stars {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.stars i {
+    color: #f59e0b;
+}
+
+
+/*****/
+/* Variáveis de cores e estilos */
+:root {
+  --primary-color: #2c3e50;
+  --secondary-color: #3498db;
+  --accent-color: #e74c3c;
+  --text-color: #333;
+  --light-bg: #f8f9fa;
+  --card-bg: #ffffff;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+.titulot{
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  position: relative;
+  margin-bottom: -70px;
+ text-decoration: underline;
+
+}
+
+/* Container principal */
+.carousel-container {
+    position: absolute;
+    top:83px;
+    width: 600px;
+}
+
+.carousel-container h2:after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: var(--secondary-color);
+  border-radius: 2px;
+}
+
+/* Títulos das categorias */
+.category-title {
+  font-size: 1.8rem;
+  margin: 60px 0 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #eee;
+  color: var(--primary-color);
+  position: relative;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.category-title:after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: var(--secondary-color);
+}
+
+/* Carrossel */
+.categorias-wrapper {
+  margin-top: 100px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 colunas iguais */
+  gap:0px; /* espaço entre as categorias */
+  justify-items: center;
+  margin-top: 40px;
+}
+
+.categoria-bloco {
+  margin-left: -10px;
+  width: 85%;
+  max-width: 500px; /* limite pra não ficar gigante em telas grandes */
+}
+
+.carousel {
+  position: relative;
+  margin-bottom: 60px;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  background: var(--card-bg);
+  padding: 20px 0;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.5s ease;
+  padding: 10px 0;
+  overflow-x: scroll;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.carousel-track::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Itens do carrossel */
+.carousel-item {
+  flex: 0 0 100%; /* ocupa 100% do bloco da categoria */
+  margin: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.carousel-item:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.carousel-item img {
+  width: 100%;      /* ocupa 100% do bloco */
+  height: 200px;    /* altura fixa ou ajustar conforme necessidade */
+  object-fit: cover; /* mantém proporção e corta se necessário */
+  display: block;
+  cursor: pointer;
+}
+
+.carousel-item:hover img {
+  transform: scale(1.05);
+}
+
+.carousel-item-info {
+  padding: 20px;
+}
+
+.carousel-item-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--primary-color);
+}
+
+.carousel-item-date {
+  font-size: 1rem;
+  color: #777;
+  line-height: 1.5;
+}
+
+/* Navegação do carrossel */
+.carousel-nav {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 15px;
+}
+
+.carousel-btn {
+  margin-top: 10px;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: none;
+  background: var(--secondary-color);
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  align-items: center;
+  position: relative;
+  left: 40%;;
+  
+  justify-content: center;
+  transition: var(--transition);
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.carousel-btn:hover {
+  background: var(--primary-color);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+/* Mensagem quando não há trabalhos */
+.carousel-container > p {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #777;
+  padding: 40px 0;
+}
+
+/* Grid dos itens (3 por linha) */
+.empresa-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.empresa-item {
+    background: #f8fafc;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+}
+
+.empresa-item strong {
+    color: #1e293b;
+}
+/* ===== Footer ===== */
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+
+.footer-left h3,
+.footer-right h4 {
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.footer-left p,
+.footer-center p {
+    margin: 6px 0;
+}
+
+.footer-center i,
+.footer-right i {
+    margin-right: 8px;
+    color: #3498db;
+}
+
+.social-icons a {
+    margin-right: 12px;
+    font-size: 20px;
+    color: #f0f2f5;
+    transition: color 0.3s;
+}
+
+.social-icons a:hover {
+    color: #3498db;
+}
+
+.site-footer{
+   position: relative;
+  top: 500px;
+}
+.footer-bottom {
+ 
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    padding: 15px;
+    margin-top: 15px;
+    font-size: 13px;
+    color: #d1d5db;
+}
+
+.whatsapp-float {
+    position: fixed; /* mantém o botão fixo na tela */
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: #25D366;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 9999;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.whatsapp-text {
+    position: absolute;
+    right: 60px;              /* distância do botão */
+    top: 50%;
+    transform: translateY(-50%);
+    background: #25D366;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    font-weight: bold;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Hover */
+.whatsapp-float:hover .whatsapp-text {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+/**/
+.categoria-bloco.highlight {
+  box-shadow: 0 0 12px rgba(52, 152, 219, 0.7);
+  transition: box-shadow 0.3s ease;
+}
+
+#buscarServico {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 280px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+#buscarServico:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.4);
+  outline: none;
+}
+
+
+/**/
+/* === MODAL CORRIGIDO === */
+.modal-overlay {
+  position: fixed;
+ 
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: none; /* começa oculto */
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow: hidden; /* impede rolagem da página */
+}
+
+/* corpo do modal fixo e centralizado */
+.modal-content {
+   top: 80px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 15px;
+  width: 80%;
+  max-width: 900px;
+  height: 80vh; /* altura fixa */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  overflow: hidden; /* evita o scroll externo */
+}
+
+/* conteúdo interno rola aqui */
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* galeria dentro do modal */
+.modal-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.modal-gallery img {
+  width: 220px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+}
+
+.modal-gallery img:hover {
+  transform: scale(1.05);
+}
+
+/* botão fechar */
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #333;
+}
+
+/* impede o scroll do body quando o modal está aberto */
+body.modal-open {
+  overflow: hidden;
+  height: 100%;
+}
+
+/* barra de rolagem customizada */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+.modal-body::-webkit-scrollbar-thumb {
+  background: #ff9933;
+  border-radius: 8px;
+}
+.modal-body::-webkit-scrollbar-track {
+  background: #f2f2f2;
+}
+
+
+/* Evita rolagem da página quando o modal está aberto */
+body.modal-open {
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* === MOBILE === */
+@media (max-width: 580px) {
+  .modal-content {
+    width: 98%;
+    height: auto;
+    max-height: 85vh;
+    left: 0;
+    margin-right: -14px;
+
+    -webkit-overflow-scrolling: touch; /* suaviza no iPhone */
+  }
+  #cmw1{
+     margin-top: -35px;
+  }
+  .modal-img-container img {
+  margin-left: -10px;
+}
+  .modal-comments-wrapper {
+    
+    max-height: 60vh;
+    overflow-y: auto;
+    margin-top: 0;
+    width: 30px;
+    
+  }
+  .modal-comments-list{
+    padding: 0 30px;
+    margin-left: -11px;
+    margin-top: -20px;
+  }
+  .modal-comment-form{
+    margin-left: -11px;
+    padding: -2px 0px;
+  }
+   .modal-comment-form h3{
+    margin-top: -10px;
+  }
+ 
+}
+
+
+.modal-close {
+    position:absolute;
+    top:10px;
+    right:15px;
+    font-size:28px;
+    border:none;
+    background:none;
+    cursor:pointer;
+    color:#333;
+}
+
+@media (max-width: 1024px) {
+    #txttitulo {
+        font-size: 20px;
+    }
+
+    #buscarServico {
+        max-width: 200px;
+    }
+
+    .imglogo {
+        width: 40px;
+        height: 40px;
+    }
+
+
+    .menu-trigger-icon {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 768px) {
+    header {
+        flex-wrap: wrap;
+        height: 70px;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .buscarSer {
+        order: 3;
+        width: 50%;
+        margin: 10px 0;
+        margin-left: -115px;
+    }
+
+    .header-right {
+        order: 2;
+        gap: 5px;
+    }
+
+   
+ 
+    #txttitulo {
+        order: 1;
+        font-size: 18px;
+        text-align: center;
+        width: 90%;
+        margin-left: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    #txttitulo {
+        font-size: 16px;
+    }
+
+    #buscarServico {
+        max-width: 100%;
+    }
+
+    .imglogo {
+      position: absolute;
+      top: 45px;
+      left: -50px;
+        width: 35px;
+        height: 35px;
+    }
+}
+/* Responsividade */
+@media (max-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+    .social-icons {
+        justify-content: center;
+    }
+}
+
+/* Quando a tela for menor, reduzir colunas */
+@media (max-width: 992px) {
+    .empresa-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .empresa-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .carousel-container h2 {
+    font-size: 2rem;
+    margin-bottom: 40px;
+  }
+  
+  .category-title {
+    font-size: 1.5rem;
+    margin: 40px 0 20px;
+  }
+  
+  .carousel-item {
+    width: 250px;
+  }
+  
+  .carousel-btn {
+    margin-top: 10px;
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 580px) {
+  .carousel{
+    width: 350px;
+    margin-left: 17px;
+  }
+  .categorias-wrapper {
+    position:relative;
+    top: -15px;
+  margin-top: 100px;
+  display: grid;
+  grid-template-columns: repeat(1, 3fr); /* 3 colunas iguais */
+  gap:0px; /* espaço entre as categorias */
+  justify-items: center;
+  margin-left: -21px;
+
+    
+ 
+}
+.modal-overlay{ 
+    width:340px ;
+    
+    }
+   
+.quadroAva {
+  width: 350px;
+    margin-top: 10px;
+    margin-left: 3.5px;
+}
+
+
+
+.box {
+    position: absolute;
+    top: 95px;
+    left: 10%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column; /* coloca os links um embaixo do outro */
+    align-items: center;     /* centraliza horizontalmente */
+    gap: 10px;               /* espaçamento entre as linhas */
+}
+
+.box a {
+    text-decoration: none;
+    color: white;
+    border: 3px solid rgb(216, 183, 183);
+    border-radius: 10px;
+    padding: 8px 15px;
+    display: block;          /* ocupa toda a largura disponível */
+    width: 150px;            /* largura fixa opcional (ajuste se quiser) */
+    text-align: center;      /* centraliza o texto */
+    transition: 0.3s;
+}
+
+.box a:hover {
+    background-color: rgb(20, 22, 23);
+}
+
+
+  .carousel-container {
+    margin: 20px auto;
+  }
+  
+  .carousel-container h2 {
+    font-size: 1.8rem;
+  }
+  
+  .category-title {
+    font-size: 1.3rem;
+  }
+  
+  .carousel-item {
+    width: 220px;
+  }
+  
+  .carousel-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+
+  .modal-content {
+  position: absolute;
+  left: 7.2px;
+    width: 30px;
+
+}
+
+}
+
+.modal-content {
+  margin-left: -30px;
+  width: 2500px;
+}
+
+
+
+@media (max-width: 768px) {
+  .site-footer {
+    font-size: 0.9rem;
+    padding: 15px 8px;
+  }
+}
+
+/* Telas muito pequenas (celulares em pé) */
+@media (max-width: 480px) {
+  .site-footer {
+    font-size: 1rem;
+    padding: 12px 6px;
+    text-align: center;
+  }
+}
+
+/* Caso tenha ícones ou links no footer */
+footer a {
+  color: #4caf50;
+  text-decoration: none;
+  margin: 0 5px;
+  transition: color 0.3s;
+}
+
+footer a:hover {
+  color: #81c784;
+}
