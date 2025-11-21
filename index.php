@@ -334,12 +334,12 @@ $categorias_result = $conn->query("SELECT DISTINCT categoria FROM trabalhos ORDE
 
   <!-- Opções que aparecem ao clicar -->
   <div class="menuOpcoes" id="menuOpcoes">
-    <a href="/serralheria/tela_principal/historia.php">Nossa Historia</a>
+    <a href="/serralheria/historia.php">Nossa Historia</a>
     <a id="btnFalarConosco" href="https://wa.me/553299134284?text=Olá,%20tenho%20interesse%20em%20seus%20serviços!">Falar Conosco</a>
 
   </div>
     <div class="header-right">
-            <img class="imglogo" src="../imagens/logo.jpg" alt="Logo">
+            <img class="imglogo" src="imagens/logo.jpg" alt="Logo">
         </div>
 </header>
  

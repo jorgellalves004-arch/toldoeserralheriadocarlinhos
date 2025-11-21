@@ -242,7 +242,7 @@
             <p class="subtitle">Conheça mais sobre nossa trajetória e valores</p>
         </div>
         <div class="header-right">
-            <img class="imglogo" src="../imagens/logo.jpg" alt="Logo">
+            <img class="imglogo" src="imagens/logo.jpg" alt="Logo">
         </div>
     </header>
     

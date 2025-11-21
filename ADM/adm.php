@@ -145,7 +145,7 @@ footer {
 <header>
   <h1>Painel Administrativo</h1><h1 id="txttitulo">TOLDO E SERRALHERIA DO CARLINHO</h1><a href="logout.php" class="btn btn-del">Sair</a>
 
-  <a href="/serralheria/tela_principal/index.php" class="btn btn-edit">⮜ Voltar ao site</a>
+  <a href="/serralheria/index.php" class="btn btn-edit">⮜ Voltar ao site</a>
 </header>
 
 <main>
