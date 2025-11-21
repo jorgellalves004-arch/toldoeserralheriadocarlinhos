@@ -1,3 +1,5 @@
 {
-  "name": "app"
+  "name": "jorge/serralheria",
+  "description": "App PHP simples",
+  "require": {}
 }
