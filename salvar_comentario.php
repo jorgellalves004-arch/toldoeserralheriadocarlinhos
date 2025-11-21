@@ -1,5 +1,5 @@
 <?php 
-$db = new mysqli('localhost','root','','serralheria');
+$db = new mysqli('i943okdfa47xqzpy.cbetxkdyhwsb.us-east-1.rds.amazonaws.com', 'b4ckk7473jmyp5ae', 'rzo90wykdpyfioa0', 'hr26yrza1xe0we9t');
 
 $imagem = $_POST['imagem'] ?? '';
 $nome_usuario = $_POST['nome_usuario'] ?? '';

@@ -1,11 +1,16 @@
 <?php
 // atualizar_servicos.php
-$dbHost = 'localhost';
-$dbUsername = 'root';
-$dbPassword = '';
-$dbName = 'serralheria';
-$port = 3306;
 
+//$dbHost = 'localhost';
+//$dbUsername = 'root';
+//$dbPassword = '';
+//$dbName = 'serralheria';
+//$port = 3306;
+$dbHost = 'i943okdfa47xqzpy.cbetxkdyhwsb.us-east-1.rds.amazonaws.com';
+$dbUsername = 'b4ckk7473jmyp5ae';
+$dbPassword = 'rzo90wykdpyfioa0';
+$dbName = 'hr26yrza1xe0we9t';
+$port = 3306;
 $conn = new mysqli($dbHost, $dbUsername, $dbPassword, $dbName, $port);
 if ($conn->connect_errno) {
     die(json_encode(['error' => $conn->connect_error]));
