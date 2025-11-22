@@ -779,6 +779,196 @@ btnLimpar?.addEventListener("click", () => {
 
 
 </script>
+<script>
+(function () {
+  let currentImg = '';
+  let currentStars = 0;
+  let imagensCategoria = [];
+
+  // =================== MENU USUÁRIO ===================
+  const trigger = document.getElementById("menuBtn");
+  const menu = document.getElementById("menuOpcoes");
+
+  if (trigger && menu) {
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+    });
+
+    window.addEventListener("click", (e) => {
+      if (!menu.contains(e.target) && !trigger.contains(e.target)) {
+        menu.style.display = "none";
+      }
+    });
+  }
+
+  // =================== CONTATO WHATSAPP ===================
+  function registrarContato(url) {
+    fetch("registrar_contato.php", { method: "POST" })
+      .then((res) => res.ok ? res.json() : Promise.reject(res))
+      .then((data) => {
+        if (data.contatos !== undefined) {
+          document.getElementById("contatos").textContent = data.contatos;
+        }
+      })
+      .catch((err) => console.error(err))
+      .finally(() => {
+        if (url) window.open(url, "_blank");
+      });
+  }
+
+  document.getElementById("whatsappBtn")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    registrarContato(e.currentTarget.href);
+  });
+
+  document.getElementById("btnFalarConosco")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    registrarContato(e.currentTarget.href);
+  });
+
+  // =================== MODAL DE CATEGORIA ===================
+  const categoriaModal = document.getElementById("categoriaModal");
+  const modalImagens = document.getElementById("modalImagens");
+  const modalTitulo = document.getElementById("modalTitulo");
+
+  document.querySelectorAll(".categoria-bloco").forEach(bloco => {
+    bloco.addEventListener("click", () => {
+      const categoria = bloco.getAttribute("data-category");
+      modalTitulo.textContent = categoria;
+
+      // coleta imagens
+      imagensCategoria = [...bloco.querySelectorAll(".carousel-item img")].map(img => ({
+        src: img.src,
+        nome: img.getAttribute("data-nome")
+      }));
+
+      modalImagens.innerHTML = imagensCategoria.map(img => `
+        <img src="${img.src}" class="modal-thumb" data-nome="${img.nome}">
+      `).join("");
+
+      categoriaModal.style.display = "flex";
+    });
+  });
+
+  categoriaModal.querySelector(".modal-close").addEventListener("click", () => {
+    categoriaModal.style.display = "none";
+  });
+
+  window.addEventListener("click", (e) => {
+    if (e.target === categoriaModal) categoriaModal.style.display = "none";
+  });
+
+  // =================== MODAL DE COMENTÁRIOS ===================
+  const modalComentario = document.getElementById("modalComentarioOverlay");
+  const modalComentarioClose = document.getElementById("modalComentarioClose");
+  const comentariosList = document.getElementById("comentariosList");
+  const imagemProdutoComentario = document.getElementById("imagemProdutoComentario");
+
+  function abrirModalComentario(src, nome) {
+    currentImg = src;
+    imagemProdutoComentario.src = src;
+
+    comentariosList.innerHTML = `<p style="text-align:center;color:#ddd;">Carregando...</p>`;
+
+    fetch("buscar_comentarios.php?imagem=" + encodeURIComponent(src))
+      .then(res => res.json())
+      .then(data => {
+        comentariosList.innerHTML = "";
+
+        if (data.length === 0) {
+          comentariosList.innerHTML = "<p style='text-align:center;color:#ccc;'>Nenhum comentário ainda.</p>";
+          return;
+        }
+
+        data.forEach(c => {
+          comentariosList.innerHTML += `
+            <div><strong>${c.nome}</strong><br>${c.comentario}<br>
+              <span style="color:gold;">${"★".repeat(c.estrelas)}${"☆".repeat(5-c.estrelas)}</span>
+            </div>
+          `;
+        });
+      })
+      .catch(() => {
+        comentariosList.innerHTML = "<p style='color:red;'>Erro ao carregar comentários.</p>";
+      });
+
+    modalComentario.style.display = "flex";
+  }
+
+  modalComentarioClose.addEventListener("click", () => {
+    modalComentario.style.display = "none";
+    currentStars = 0;
+    marcarEstrelas(0);
+  });
+
+  window.addEventListener("click", (e) => {
+    if (e.target === modalComentario) modalComentario.style.display = "none";
+  });
+
+  // ABRIR MODAL AO CLICAR NA IMAGEM DO MODAL CATEGORIA
+  document.addEventListener("click", function (e) {
+    if (e.target.classList.contains("modal-thumb")) {
+      abrirModalComentario(e.target.src, e.target.dataset.nome);
+    }
+  });
+
+  // =================== AVALIAÇÃO (ESTRELAS) ===================
+  const starRating = document.getElementById("starRating");
+  const stars = starRating.querySelectorAll("i");
+
+  function marcarEstrelas(qtd) {
+    stars.forEach(star => {
+      star.classList.remove("selected");
+      if (parseInt(star.dataset.value) <= qtd) {
+        star.classList.add("selected");
+      }
+    });
+  }
+
+  stars.forEach(star => {
+    star.addEventListener("click", () => {
+      currentStars = parseInt(star.dataset.value);
+      marcarEstrelas(currentStars);
+    });
+  });
+
+  // =================== ENVIAR COMENTÁRIO ===================
+  document.getElementById("btnEnviarComentario").addEventListener("click", () => {
+    const nome = document.getElementById("nomeUsuario").value.trim();
+    const comentario = document.getElementById("novoComentario").value.trim();
+
+    if (!nome || !comentario || currentStars === 0) {
+      alert("Preencha nome, comentário e estrelas.");
+      return;
+    }
+
+    fetch("salvar_comentario.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        nome,
+        comentario,
+        imagem: currentImg,
+        estrelas: currentStars
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.sucesso) {
+          abrirModalComentario(currentImg);
+          document.getElementById("nomeUsuario").value = "";
+          document.getElementById("novoComentario").value = "";
+          marcarEstrelas(0);
+          currentStars = 0;
+        } else {
+          alert("Erro ao salvar comentário.");
+        }
+      });
+  });
+
+})();
+</script>
 
 </body>
 </html>
