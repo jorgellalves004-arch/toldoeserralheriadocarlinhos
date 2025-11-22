@@ -50,7 +50,6 @@ $empresa = $conn->query("SELECT * FROM empresa LIMIT 1")->fetch_assoc();
 $result_servicos = $conn->query("SELECT COUNT(*) AS total_finalizados FROM trabalhos WHERE data_fim IS NOT NULL");
 $servicos_count = ($result_servicos && $row = $result_servicos->fetch_assoc()) ? (int)$row['total_finalizados'] : 0;
 
-
 $estatisticas_row = $conn->query("SELECT acessos, contatos, servicos_finalizados FROM estatisticas WHERE id = 1");
 $estatisticas = ($estatisticas_row) ? $estatisticas_row->fetch_assoc() : ['acessos'=>0,'contatos'=>0,'servicos_finalizados'=>0];
 
@@ -58,6 +57,20 @@ $estatisticas = ($estatisticas_row) ? $estatisticas_row->fetch_assoc() : ['acess
 // CATEGORIAS DE TRABALHOS
 // ==========================
 $categorias_result = $conn->query("SELECT DISTINCT categoria FROM trabalhos ORDER BY categoria");
+
+// função auxiliar para construir caminho da imagem com segurança
+function caminho_imagem($raw) {
+    $raw = trim((string)$raw);
+    if ($raw === '') return '';
+    // já é URL absoluta?
+    if (preg_match('#^https?://#i', $raw)) return $raw;
+    // já começa com slash -> caminho absoluto
+    if (strpos($raw, '/') === 0) return $raw;
+    // já começa com "imagens/" provavelmente ok
+    if (strpos($raw, 'imagens/') === 0) return $raw;
+    // caso contrário prefixa "imagens/"
+    return 'imagens/' . $raw;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -123,14 +136,18 @@ $categorias_result = $conn->query("SELECT DISTINCT categoria FROM trabalhos ORDE
   margin-top: 15px;
 }
 
-.modal-gallery img {
+.modal-gallery img,
+.carousel-item img,
+.modal-thumb {
   max-width: 260px; height: auto;
   border-radius: 12px;
   object-fit: cover;
   transition: transform .25s ease, box-shadow .25s;
   cursor: pointer;
 }
-.modal-gallery img:hover {
+.modal-gallery img:hover,
+.carousel-item img:hover,
+.modal-thumb:hover {
   transform: scale(1.05);
   box-shadow: 0 0 20px rgba(255,255,255,0.2);
 }
@@ -317,7 +334,6 @@ $categorias_result = $conn->query("SELECT DISTINCT categoria FROM trabalhos ORDE
   font-size: 18px;
 }
 
-
 </style>
 
 </head>
@@ -349,14 +365,6 @@ $categorias_result = $conn->query("SELECT DISTINCT categoria FROM trabalhos ORDE
     <span class="whatsapp-text">Falar no WhatsApp</span>
 </a>
 
-<!-- Dados da Empresa -->
-
-
-
-
-
-</div>
-
 <!-- Trabalhos por Categoria -->
 <div class="titulot"><h2 style="text-align:center; margin-top:110px;">Nossos Trabalhos</h2></div>
 <div class="categorias-wrapper" id="categoriasWrapper">
@@ -370,12 +378,14 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
         $trabalhos_result = $conn->query("SELECT * FROM trabalhos WHERE categoria = '" . $conn->real_escape_string($categoria) . "' ORDER BY data_inicio DESC");
         if ($trabalhos_result && $trabalhos_result->num_rows > 0) {
             while ($trabalho = $trabalhos_result->fetch_assoc()) {
-                $img = '../' . htmlspecialchars($trabalho['imagem']);
+                // monta caminho da imagem com segurança
+                $img_raw = $trabalho['imagem'] ?? '';
+                $img = caminho_imagem($img_raw);
                 $nome = htmlspecialchars($trabalho['nome_trabalho']);
                 $data_inicio = !empty($trabalho['data_inicio']) ? date('d/m/Y', strtotime($trabalho['data_inicio'])) : '';
                 $data_fim = !empty($trabalho['data_fim']) ? date('d/m/Y', strtotime($trabalho['data_fim'])) : 'Em andamento';
                 echo "<div class='carousel-item'>
-                        <img src=\"{$img}\" alt=\"{$nome}\" data-nome=\"{$nome}\">
+                        <img src=\"{$img}\" alt=\"{$nome}\" data-nome=\"{$nome}\" loading=\"lazy\">
                         <div class='carousel-item-info'>
                             <div class='carousel-item-title'>{$nome}</div>
                             <div class='carousel-item-date'>Início: {$data_inicio} | Fim: {$data_fim}</div>
@@ -414,44 +424,44 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
 </div>
 
 <!-- ===== MODAL DE COMENTÁRIOS (visual + funcional) ===== -->
-<div class="modal-overlay" id="modalComentarioOverlay">
-  <div class="modal-content">
-    <button class="modal-close" id="modalComentarioClose">&times;</button>
+<div class="modal-overlay" id="modalComentarioOverlay" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-modal="true">
+    <button class="modal-close" id="modalComentarioClose" aria-label="Fechar">&times;</button>
     <div class="modal-body">
-  <div class="modal-img-container" style="flex-direction: column;">
-  <img id="imagemProdutoComentario" src="img/produto.jpg" alt="Produto">
-  
-  <!-- Campo de avaliação -->
-  <div class="star-rating" id="starRating">
-    <i class="bi bi-star" data-value="1"></i>
-    <i class="bi bi-star" data-value="2"></i>
-    <i class="bi bi-star" data-value="3"></i>
-    <i class="bi bi-star" data-value="4"></i>
-    <i class="bi bi-star" data-value="5"></i>
-  </div>
-</div>
+      <div class="modal-img-container" style="flex-direction: column;">
+        <!-- placeholder vazio para evitar 404; preenchido dinamicamente -->
+        <img id="imagemProdutoComentario" src="" alt="Produto" />
+        <!-- Campo de avaliação -->
+        <div class="star-rating" id="starRating">
+          <i class="bi bi-star" data-value="1"></i>
+          <i class="bi bi-star" data-value="2"></i>
+          <i class="bi bi-star" data-value="3"></i>
+          <i class="bi bi-star" data-value="4"></i>
+          <i class="bi bi-star" data-value="5"></i>
+        </div>
+      </div>
 
+      <div class="modal-comments-wrapper" id="cmw1">
+        <div class="modal-comments-list">
+          <h3>Comentários</h3>
+          <div id="comentariosList"></div>
+        </div>
 
-  <div class="modal-comments-wrapper" id="cmw1">
-    <div class="modal-comments-list">
-      <h3>Comentários</h3>
-      <div id="comentariosList"></div>
+        <div class="modal-comment-form">
+          <h3>Deixe seu comentário</h3>
+          <input type="text" id="nomeUsuario" placeholder="Seu nome">
+          <textarea id="novoComentario" placeholder="Escreva seu comentário..."></textarea>
+          <button id="btnEnviarComentario">Enviar</button>
+        </div>
+      </div>
     </div>
-
-    <div class="modal-comment-form">
-      <h3>Deixe seu comentário</h3>
-      <input type="text" id="nomeUsuario" placeholder="Seu nome">
-      <textarea id="novoComentario" placeholder="Escreva seu comentário..."></textarea>
-      <button id="btnEnviarComentario">Enviar</button>
-    </div>
   </div>
 </div>
 
-  </div>
-</div>
+<!-- MODAL DE CATEGORIA (galeria) -->
 <div id="categoriaModal" class="modal-overlay" aria-hidden="true">
   <div class="modal-content" role="dialog" aria-modal="true">
-    <button class="modal-close" aria-label="Fechar">&times;</button>
+    <button class="modal-close" aria-label="Fechar" id="categoriaModalClose">&times;</button>
     <h2 id="modalTitulo" style="text-align:center; font-size:1.6rem; margin-bottom:15px; color:#ffcc66;"></h2>
 
     <div class="modal-body">
@@ -477,12 +487,10 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
         </button>
       </div>
 
-      <div id="modalImagens" class="modal-gallery"></div>
+      <div id="modalImagens" class="modal-gallery" aria-live="polite"></div>
     </div>
   </div>
 </div>
-
-
 
 <!-- Footer -->
 <footer class="site-footer">
@@ -496,8 +504,8 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
     <div class="footer-right">
       <h4>Siga-nos</h4>
       <div class="social-icons">
-        <a href="https://www.facebook.com/share/1BYCLKKKxc/"><i class="bi bi-facebook"></i></a>
-        <a href="https://www.instagram.com/serralheria.do.carlinho?igsh=MTI4bXAybGZwMjRtNA=="><i class="bi bi-instagram"></i></a>
+        <a href="#"><i class="bi bi-facebook"></i></a>
+        <a href="#"><i class="bi bi-instagram"></i></a>
         <a href="https://wa.me/553299134284?text=Olá,%20tenho%20interesse%20em%20seus%20serviços!"><i class="bi bi-whatsapp"></i></a>
       </div>
     </div>
@@ -506,24 +514,27 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
     <p>&copy; <?= date("Y"); ?> Toldo e Serralheria do Carlinho - Todos os direitos reservados.</p>
   </div>
 </footer>
+
 <script>
 (function () {
+  // estado
   let currentImg = '';
   let currentStars = 0;
-  let imagensCategoria = [];
+  let imagensCategoria = []; // usado quando abrir modal de categoria
+
+  // util
+  const $ = (id) => document.getElementById(id);
 
   // =================== MENU USUÁRIO ===================
-  const trigger = document.getElementById("menuBtn");
-  const menu = document.getElementById("menuOpcoes");
+  const trigger = $("menuBtn");
+  const menu = $("menuOpcoes");
 
   if (trigger && menu) {
-    // Abre/fecha o menu ao clicar no botão
     trigger.addEventListener("click", (e) => {
       e.stopPropagation();
       menu.style.display = menu.style.display === "flex" ? "none" : "flex";
     });
 
-    // Fecha o menu ao clicar fora
     window.addEventListener("click", (e) => {
       if (!menu.contains(e.target) && !trigger.contains(e.target)) {
         menu.style.display = "none";
@@ -536,8 +547,8 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
     fetch("registrar_contato.php", { method: "POST" })
       .then((res) => res.ok ? res.json() : Promise.reject(res))
       .then((data) => {
-        if (data.contatos !== undefined) {
-          document.getElementById("contatos").textContent = data.contatos;
+        if (data.contatos !== undefined && $("contatos")) {
+          $("contatos").textContent = data.contatos;
         }
       })
       .catch((err) => console.error(err))
@@ -546,52 +557,39 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
       });
   }
 
-  // Botões de contato
-  document.getElementById("whatsappBtn")?.addEventListener("click", (e) => {
+  $("whatsappBtn")?.addEventListener("click", (e) => {
     e.preventDefault();
     registrarContato(e.currentTarget.href);
   });
 
-  document.getElementById("btnContato")?.addEventListener("click", (e) => {
+  $("btnFalarConosco")?.addEventListener("click", (e) => {
     e.preventDefault();
     registrarContato(e.currentTarget.href);
   });
 
-  // =================== BOTÃO "FALAR CONOSCO" DO MENU ===================
-  const btnFalarConosco = document.getElementById("btnFalarConosco");
-  if (btnFalarConosco) {
-    btnFalarConosco.addEventListener("click", () => {
-      fetch("registrar_contato_menu.php", { method: "POST" })
-        .then((res) => res.ok ? res.json() : Promise.reject(res))
-        .then((data) => {
-          if (data.contatos !== undefined) {
-            document.getElementById("contatos").textContent = data.contatos;
-          }
-        })
-        .catch((err) => console.error("Erro ao registrar contato:", err));
-    });
-  }
-
-  // =================== CARROSSEL ===================
+  // =================== CARROSSEL: botões e clique inicial ===================
   document.querySelectorAll(".categoria-bloco").forEach((bloco) => {
     const track = bloco.querySelector(".carousel-track");
-    bloco.querySelector(".prev-btn")?.addEventListener("click", () =>
-      track.scrollBy({ left: -416.5385, behavior: "smooth" })
-    );
-    bloco.querySelector(".next-btn")?.addEventListener("click", () =>
-      track.scrollBy({ left: 416.5385, behavior: "smooth" })
-    );
+    bloco.querySelector(".prev-btn")?.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      track.scrollBy({ left: -416.5385, behavior: "smooth" });
+    });
+    bloco.querySelector(".next-btn")?.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      track.scrollBy({ left: 416.5385, behavior: "smooth" });
+    });
 
-    // Clique nas imagens do carrossel abre o modal da categoria
+    // clique na imagem do carrossel -> abrir modal de categoria (galeria)
     bloco.querySelectorAll(".carousel-item img").forEach((img) => {
-      img.addEventListener("click", () => {
+      img.addEventListener("click", (ev) => {
+        ev.stopPropagation();
         abrirModalCategoria(bloco.getAttribute("data-category") || "");
       });
     });
   });
 
   // =================== BUSCA ===================
-  const inputBusca = document.getElementById("buscarServico");
+  const inputBusca = $("buscarServico");
   if (inputBusca) {
     inputBusca.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
@@ -612,12 +610,13 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
     });
   }
 
-  // =================== MODAL DE CATEGORIAS ===================
-  const categoriaModal = document.getElementById("categoriaModal");
-  const modalTitulo = document.getElementById("modalTitulo");
-  const modalImagens = document.getElementById("modalImagens");
+  // =================== MODAL DE CATEGORIAS (GALERIA) ===================
+  const categoriaModal = $("categoriaModal");
+  const modalTitulo = $("modalTitulo");
+  const modalImagens = $("modalImagens");
+  const categoriaModalClose = document.getElementById("categoriaModalClose");
 
-  categoriaModal?.querySelector(".modal-close")?.addEventListener("click", () => {
+  categoriaModalClose?.addEventListener("click", () => {
     categoriaModal.style.display = "none";
     categoriaModal.setAttribute("aria-hidden", "true");
   });
@@ -629,14 +628,7 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
     }
   });
 
-  // Abre modal de categoria ao clicar no título
-  document.querySelectorAll(".category-title").forEach((title) => {
-    title.addEventListener("click", () => {
-      const bloco = title.closest(".categoria-bloco");
-      abrirModalCategoria(bloco?.getAttribute("data-category") || title.textContent.trim());
-    });
-  });
-
+  // abrir modal de categoria: busca via endpoint e monta thumbs
   function abrirModalCategoria(categoria) {
     if (!categoria) return;
     modalTitulo.textContent = "Carregando...";
@@ -645,7 +637,10 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
     categoriaModal.setAttribute("aria-hidden", "false");
 
     fetch(`get_fotos_categoria.php?categoria=${encodeURIComponent(categoria)}`)
-      .then((res) => res.ok ? res.json() : Promise.reject(res))
+      .then((res) => {
+        if (!res.ok) throw new Error("Erro ao carregar fotos");
+        return res.json();
+      })
       .then((data) => {
         modalTitulo.textContent = categoria;
         modalImagens.innerHTML = "";
@@ -655,315 +650,226 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
           return;
         }
 
-        imagensCategoria = data;
+        imagensCategoria = data; // guarda para filtros
 
         data.forEach((item) => {
           const img = document.createElement("img");
-          img.src = (item.imagem && !item.imagem.startsWith("http")) ? ('../' + item.imagem) : item.imagem;
+          // respeita caminhos absolutos ou relativos vindos da API
+          img.src = (item.imagem && !item.imagem.startsWith("http") && !item.imagem.startsWith("/")) ? ('imagens/' + item.imagem.replace(/^\/+/, '')) : item.imagem || '';
           img.alt = item.nome_trabalho || categoria;
+          img.classList.add("modal-thumb");
+          img.setAttribute("loading", "lazy");
+          // ao clicar numa thumb da galeria -> abrir modal de comentário
           img.addEventListener("click", () => abrirModalComentario(img.src));
           modalImagens.appendChild(img);
         });
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(err);
         modalTitulo.textContent = categoria;
-        modalImagens.innerHTML = "<p>Erro ao carregar imagens.</p>";
+        modalImagens.innerHTML = "<p style='padding:18px'>Erro ao carregar imagens.</p>";
       });
   }
-// =================== FILTRO NO MODAL DE CATEGORIA ===================
-const filtroNome = document.getElementById("filtroNomeServico");
-const filtroInicio = document.getElementById("filtroDataInicio");
-const filtroFim = document.getElementById("filtroDataFim");
-const btnFiltro = document.getElementById("btnAplicarFiltro");
-const btnLimpar = document.getElementById("btnLimparFiltro");
 
-function parseDataSQL(dataStr) {
-  if (!dataStr) return null;
-  // Tenta converter formato YYYY-MM-DD
-  const partes = dataStr.split("-");
-  if (partes.length === 3) {
-    return new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
-  }
-  // Tenta converter formato DD/MM/YYYY
-  const partesBR = dataStr.split("/");
-  if (partesBR.length === 3) {
-    return new Date(Number(partesBR[2]), Number(partesBR[1]) - 1, Number(partesBR[0]));
-  }
-  return null;
-}
+  // =================== FILTRO NO MODAL DE CATEGORIA ===================
+  const filtroNome = $("filtroNomeServico");
+  const filtroInicio = $("filtroDataInicio");
+  const filtroFim = $("filtroDataFim");
+  const btnFiltro = $("btnAplicarFiltro");
+  const btnLimpar = $("btnLimparFiltro");
 
-function aplicarFiltroCategoria() {
-  const termo = filtroNome.value.trim().toLowerCase();
-  const dataInicio = filtroInicio.value ? new Date(filtroInicio.value) : null;
-  const dataFim = filtroFim.value ? new Date(filtroFim.value) : null;
-
-  modalImagens.innerHTML = "";
-
-  const filtradas = imagensCategoria.filter((item) => {
-    const nomeMatch = termo ? item.nome_trabalho.toLowerCase().includes(termo) : true;
-
-    const dataTrabalho = parseDataSQL(item.data_inicio);
-    let dataMatch = true;
-
-    if (dataInicio && dataTrabalho) {
-      dataMatch = dataMatch && dataTrabalho >= dataInicio;
-    }
-    if (dataFim && dataTrabalho) {
-      dataMatch = dataMatch && dataTrabalho <= dataFim;
-    }
-
-    return nomeMatch && dataMatch;
-  });
-
-  if (filtradas.length === 0) {
-    modalImagens.innerHTML = "<p style='padding:18px'>Nenhum trabalho encontrado com esses filtros.</p>";
-    return;
+  function parseDataSQL(dataStr) {
+    if (!dataStr) return null;
+    const partes = dataStr.split("-");
+    if (partes.length === 3) return new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
+    const partesBR = dataStr.split("/");
+    if (partesBR.length === 3) return new Date(Number(partesBR[2]), Number(partesBR[1]) - 1, Number(partesBR[0]));
+    return null;
   }
 
-  filtradas.forEach((item) => {
-    const img = document.createElement("img");
-    img.src = (item.imagem && !item.imagem.startsWith("http")) ? ('../' + item.imagem) : item.imagem;
-    img.alt = item.nome_trabalho;
-    img.addEventListener("click", () => abrirModalComentario(img.src));
-    modalImagens.appendChild(img);
-  });
-}
+  function aplicarFiltroCategoria() {
+    if (!Array.isArray(imagensCategoria)) return;
+    const termo = filtroNome.value.trim().toLowerCase();
+    const dataInicio = filtroInicio.value ? new Date(filtroInicio.value) : null;
+    const dataFim = filtroFim.value ? new Date(filtroFim.value) : null;
 
-// Eventos
-btnFiltro?.addEventListener("click", aplicarFiltroCategoria);
+    modalImagens.innerHTML = "";
 
-btnLimpar?.addEventListener("click", () => {
-  filtroNome.value = "";
-  filtroInicio.value = "";
-  filtroFim.value = "";
+    const filtradas = imagensCategoria.filter((item) => {
+      const nomeMatch = termo ? (item.nome_trabalho || '').toLowerCase().includes(termo) : true;
+      const dataTrabalho = parseDataSQL(item.data_inicio);
+      let dataMatch = true;
+      if (dataInicio && dataTrabalho) dataMatch = dataMatch && dataTrabalho >= dataInicio;
+      if (dataFim && dataTrabalho) dataMatch = dataMatch && dataTrabalho <= dataFim;
+      return nomeMatch && dataMatch;
+    });
 
-  modalImagens.innerHTML = "";
-  imagensCategoria.forEach((item) => {
-    const img = document.createElement("img");
-    img.src = (item.imagem && !item.imagem.startsWith("http")) ? ('../' + item.imagem) : item.imagem;
-    img.alt = item.nome_trabalho;
-    img.addEventListener("click", () => abrirModalComentario(img.src));
-    modalImagens.appendChild(img);
-  });
-});
-
-
-  // =================== ENVIO DE COMENTÁRIO ===================
-  btnEnviarComentario?.addEventListener("click", () => {
-    const comentario = novoComentario.value.trim();
-    const nome = inputNome.value.trim();
-
-    if (!comentario || !nome || currentStars === 0) {
-      alert("Informe seu nome, comentário e quantidade de estrelas.");
+    if (filtradas.length === 0) {
+      modalImagens.innerHTML = "<p style='padding:18px'>Nenhum trabalho encontrado com esses filtros.</p>";
       return;
     }
 
-    fetch("salvar_comentario.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `imagem=${encodeURIComponent(currentImg)}&nome_usuario=${encodeURIComponent(nome)}&comentario=${encodeURIComponent(comentario)}&estrelas=${encodeURIComponent(currentStars)}`
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) abrirModalComentario(currentImg);
-        else alert("Erro ao salvar comentário.");
-      })
-      .catch((err) => {
-        console.error(err);
-        alert("Erro ao salvar comentário.");
-      });
-  });
-})();
-
-
-
-
-</script>
-<script>
-(function () {
-  let currentImg = '';
-  let currentStars = 0;
-  let imagensCategoria = [];
-
-  // =================== MENU USUÁRIO ===================
-  const trigger = document.getElementById("menuBtn");
-  const menu = document.getElementById("menuOpcoes");
-
-  if (trigger && menu) {
-    trigger.addEventListener("click", (e) => {
-      e.stopPropagation();
-      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-    });
-
-    window.addEventListener("click", (e) => {
-      if (!menu.contains(e.target) && !trigger.contains(e.target)) {
-        menu.style.display = "none";
-      }
+    filtradas.forEach((item) => {
+      const img = document.createElement("img");
+      img.src = (item.imagem && !item.imagem.startsWith("http") && !item.imagem.startsWith("/")) ? ('imagens/' + item.imagem.replace(/^\/+/, '')) : item.imagem || '';
+      img.alt = item.nome_trabalho;
+      img.classList.add("modal-thumb");
+      img.setAttribute("loading", "lazy");
+      img.addEventListener("click", () => abrirModalComentario(img.src));
+      modalImagens.appendChild(img);
     });
   }
 
-  // =================== CONTATO WHATSAPP ===================
-  function registrarContato(url) {
-    fetch("registrar_contato.php", { method: "POST" })
-      .then((res) => res.ok ? res.json() : Promise.reject(res))
-      .then((data) => {
-        if (data.contatos !== undefined) {
-          document.getElementById("contatos").textContent = data.contatos;
-        }
-      })
-      .catch((err) => console.error(err))
-      .finally(() => {
-        if (url) window.open(url, "_blank");
+  btnFiltro?.addEventListener("click", aplicarFiltroCategoria);
+
+  btnLimpar?.addEventListener("click", () => {
+    filtroNome.value = "";
+    filtroInicio.value = "";
+    filtroFim.value = "";
+
+    modalImagens.innerHTML = "";
+    if (Array.isArray(imagensCategoria)) {
+      imagensCategoria.forEach((item) => {
+        const img = document.createElement("img");
+        img.src = (item.imagem && !item.imagem.startsWith("http") && !item.imagem.startsWith("/")) ? ('imagens/' + item.imagem.replace(/^\/+/, '')) : item.imagem || '';
+        img.alt = item.nome_trabalho;
+        img.classList.add("modal-thumb");
+        img.setAttribute("loading", "lazy");
+        img.addEventListener("click", () => abrirModalComentario(img.src));
+        modalImagens.appendChild(img);
       });
-  }
-
-  document.getElementById("whatsappBtn")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    registrarContato(e.currentTarget.href);
-  });
-
-  document.getElementById("btnFalarConosco")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    registrarContato(e.currentTarget.href);
-  });
-
-  // =================== MODAL DE CATEGORIA ===================
-  const categoriaModal = document.getElementById("categoriaModal");
-  const modalImagens = document.getElementById("modalImagens");
-  const modalTitulo = document.getElementById("modalTitulo");
-
-  document.querySelectorAll(".categoria-bloco").forEach(bloco => {
-    bloco.addEventListener("click", () => {
-      const categoria = bloco.getAttribute("data-category");
-      modalTitulo.textContent = categoria;
-
-      // coleta imagens
-      imagensCategoria = [...bloco.querySelectorAll(".carousel-item img")].map(img => ({
-        src: img.src,
-        nome: img.getAttribute("data-nome")
-      }));
-
-      modalImagens.innerHTML = imagensCategoria.map(img => `
-        <img src="${img.src}" class="modal-thumb" data-nome="${img.nome}">
-      `).join("");
-
-      categoriaModal.style.display = "flex";
-    });
-  });
-
-  categoriaModal.querySelector(".modal-close").addEventListener("click", () => {
-    categoriaModal.style.display = "none";
-  });
-
-  window.addEventListener("click", (e) => {
-    if (e.target === categoriaModal) categoriaModal.style.display = "none";
+    }
   });
 
   // =================== MODAL DE COMENTÁRIOS ===================
-  const modalComentario = document.getElementById("modalComentarioOverlay");
-  const modalComentarioClose = document.getElementById("modalComentarioClose");
-  const comentariosList = document.getElementById("comentariosList");
-  const imagemProdutoComentario = document.getElementById("imagemProdutoComentario");
+  const modalComentario = $("modalComentarioOverlay");
+  const modalComentarioClose = $("modalComentarioClose");
+  const comentariosList = $("comentariosList");
+  const imagemProdutoComentario = $("imagemProdutoComentario");
+  const starRating = $("starRating");
+  const stars = starRating ? Array.from(starRating.querySelectorAll("i")) : [];
 
-  function abrirModalComentario(src, nome) {
-    currentImg = src;
-    imagemProdutoComentario.src = src;
+  function marcarEstrelas(qtd) {
+    stars.forEach(star => {
+      star.classList.toggle("selected", parseInt(star.dataset.value, 10) <= qtd);
+    });
+  }
 
+  // inicial click das estrelas
+  stars.forEach(star => {
+    star.addEventListener("click", () => {
+      currentStars = parseInt(star.dataset.value, 10) || 0;
+      marcarEstrelas(currentStars);
+    });
+  });
+
+  function carregarComentarios(imagem) {
+    if (!comentariosList) return;
     comentariosList.innerHTML = `<p style="text-align:center;color:#ddd;">Carregando...</p>`;
-
-    fetch("buscar_comentarios.php?imagem=" + encodeURIComponent(src))
-      .then(res => res.json())
-      .then(data => {
+    fetch("buscar_comentarios.php?imagem=" + encodeURIComponent(imagem))
+      .then(r => {
+        if (!r.ok) throw new Error("Erro ao buscar comentários");
+        return r.json();
+      })
+      .then(lista => {
         comentariosList.innerHTML = "";
-
-        if (data.length === 0) {
+        if (!Array.isArray(lista) || lista.length === 0) {
           comentariosList.innerHTML = "<p style='text-align:center;color:#ccc;'>Nenhum comentário ainda.</p>";
           return;
         }
-
-        data.forEach(c => {
-          comentariosList.innerHTML += `
-            <div><strong>${c.nome}</strong><br>${c.comentario}<br>
-              <span style="color:gold;">${"★".repeat(c.estrelas)}${"☆".repeat(5-c.estrelas)}</span>
-            </div>
-          `;
+        lista.forEach(item => {
+          const div = document.createElement("div");
+          div.innerHTML = `<strong>${item.nome}</strong><br>${item.comentario}<br><span style="color:gold;">${'★'.repeat(item.estrelas || 0)}${'☆'.repeat(5 - (item.estrelas || 0))}</span>`;
+          comentariosList.appendChild(div);
         });
       })
-      .catch(() => {
+      .catch(err => {
+        console.error(err);
         comentariosList.innerHTML = "<p style='color:red;'>Erro ao carregar comentários.</p>";
       });
-
-    modalComentario.style.display = "flex";
   }
 
-  modalComentarioClose.addEventListener("click", () => {
-    modalComentario.style.display = "none";
+  function abrirModalComentario(src) {
+    currentImg = src || '';
+    if (imagemProdutoComentario) imagemProdutoComentario.src = currentImg;
+    if (comentariosList) carregarComentarios(currentImg);
+    if (modalComentario) {
+      modalComentario.style.display = "flex";
+      modalComentario.setAttribute("aria-hidden", "false");
+    }
+    // reset estrelas visuais (não o valor salvo)
+    currentStars = 0;
+    marcarEstrelas(0);
+  }
+
+  modalComentarioClose?.addEventListener("click", () => {
+    if (modalComentario) {
+      modalComentario.style.display = "none";
+      modalComentario.setAttribute("aria-hidden", "true");
+    }
     currentStars = 0;
     marcarEstrelas(0);
   });
 
   window.addEventListener("click", (e) => {
-    if (e.target === modalComentario) modalComentario.style.display = "none";
-  });
-
-  // ABRIR MODAL AO CLICAR NA IMAGEM DO MODAL CATEGORIA
-  document.addEventListener("click", function (e) {
-    if (e.target.classList.contains("modal-thumb")) {
-      abrirModalComentario(e.target.src, e.target.dataset.nome);
+    if (e.target === modalComentario) {
+      modalComentario.style.display = "none";
+      modalComentario.setAttribute("aria-hidden", "true");
+    }
+    if (e.target === categoriaModal) {
+      categoriaModal.style.display = "none";
+      categoriaModal.setAttribute("aria-hidden", "true");
     }
   });
 
-  // =================== AVALIAÇÃO (ESTRELAS) ===================
-  const starRating = document.getElementById("starRating");
-  const stars = starRating.querySelectorAll("i");
-
-  function marcarEstrelas(qtd) {
-    stars.forEach(star => {
-      star.classList.remove("selected");
-      if (parseInt(star.dataset.value) <= qtd) {
-        star.classList.add("selected");
-      }
-    });
-  }
-
-  stars.forEach(star => {
-    star.addEventListener("click", () => {
-      currentStars = parseInt(star.dataset.value);
-      marcarEstrelas(currentStars);
-    });
+  // abertura por thumbs dentro da galeria (delegação)
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    if (t && t.classList && t.classList.contains("modal-thumb")) {
+      abrirModalComentario(t.src);
+    }
   });
 
   // =================== ENVIAR COMENTÁRIO ===================
-  document.getElementById("btnEnviarComentario").addEventListener("click", () => {
-    const nome = document.getElementById("nomeUsuario").value.trim();
-    const comentario = document.getElementById("novoComentario").value.trim();
-
+  $("btnEnviarComentario")?.addEventListener("click", () => {
+    const nome = ($("nomeUsuario")?.value || "").trim();
+    const comentario = ($("novoComentario")?.value || "").trim();
     if (!nome || !comentario || currentStars === 0) {
       alert("Preencha nome, comentário e estrelas.");
       return;
     }
 
+    const form = new URLSearchParams();
+    form.append('nome', nome);
+    form.append('comentario', comentario);
+    form.append('imagem', currentImg);
+    form.append('estrelas', String(currentStars));
+
     fetch("salvar_comentario.php", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        nome,
-        comentario,
-        imagem: currentImg,
-        estrelas: currentStars
-      })
+      body: form.toString()
     })
-      .then(res => res.json())
+      .then(r => {
+        if (!r.ok) throw new Error("Erro ao salvar");
+        return r.json();
+      })
       .then(data => {
-        if (data.sucesso) {
-          abrirModalComentario(currentImg);
-          document.getElementById("nomeUsuario").value = "";
-          document.getElementById("novoComentario").value = "";
-          marcarEstrelas(0);
+        if (data && (data.sucesso || data.success)) {
+          // recarrega comentários para mostrar novo comentário
+          carregarComentarios(currentImg);
+          // limpa formulário
+          if ($("nomeUsuario")) $("nomeUsuario").value = "";
+          if ($("novoComentario")) $("novoComentario").value = "";
           currentStars = 0;
+          marcarEstrelas(0);
         } else {
           alert("Erro ao salvar comentário.");
         }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Erro ao salvar comentário.");
       });
   });
 
