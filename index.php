@@ -875,6 +875,144 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
 
 })();
 </script>
+<script>
+(function () {
+  // estado
+  let currentImg = '';
+  let currentStars = 0;
+  let imagensCategoria = [];
+
+  const $ = (id) => document.getElementById(id);
+
+  // =================== MENU ===================
+  const trigger = $("menuBtn");
+  const menu = $("menuOpcoes");
+
+  if (trigger && menu) {
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+    });
+
+    window.addEventListener("click", (e) => {
+      if (!menu.contains(e.target) && !trigger.contains(e.target)) {
+        menu.style.display = "none";
+      }
+    });
+  }
+
+  // =================== FECHAR MODAIS ===================
+  function fecharCategoriaModal() {
+    const modal = $("categoriaModal");
+    if (modal) modal.style.display = "none";
+  }
+
+  function fecharComentarioModal() {
+    const modal = $("modalComentarioOverlay");
+    if (modal) modal.style.display = "none";
+  }
+
+  $("categoriaModalClose").addEventListener("click", fecharCategoriaModal);
+  $("modalComentarioClose").addEventListener("click", fecharComentarioModal);
+
+  window.addEventListener("click", function(e){
+    if(e.target.id === "categoriaModal") fecharCategoriaModal();
+    if(e.target.id === "modalComentarioOverlay") fecharComentarioModal();
+  });
+
+  // =================== ABRIR COMENTÁRIOS ===================
+  window.abrirModalComentario = function(imagem) {
+
+    // Fecha o modal principal ANTES de abrir os comentários
+    fecharCategoriaModal();
+
+    currentImg = imagem;
+    $("imagemProdutoComentario").src = imagem;
+
+    $("comentariosList").innerHTML = "Carregando...";
+
+    fetch("buscar_comentarios.php?imagem=" + encodeURIComponent(imagem))
+      .then(r => r.json())
+      .then(lista => {
+        let html = "";
+        lista.forEach(c => {
+          html += `
+            <div>
+              <strong>${c.nome}</strong> - ${c.estrelas} ⭐<br>
+              ${c.comentario}
+            </div>
+          `;
+        });
+        $("comentariosList").innerHTML = html || "<p>Nenhum comentário ainda.</p>";
+      });
+
+    $("modalComentarioOverlay").style.display = "flex";
+  };
+
+  // =================== ESTRELAS DE AVALIAÇÃO ===================
+  document.querySelectorAll("#starRating i").forEach(star => {
+    star.addEventListener("click", function(){
+      currentStars = parseInt(this.dataset.value);
+      document.querySelectorAll("#starRating i").forEach(s => {
+        s.classList.toggle("selected", parseInt(s.dataset.value) <= currentStars);
+      });
+    });
+  });
+
+  // =================== ENVIAR COMENTÁRIO ===================
+  $("btnEnviarComentario").addEventListener("click", function(){
+    const nome = $("nomeUsuario").value.trim();
+    const comentario = $("novoComentario").value.trim();
+
+    if (!nome || !comentario || currentStars === 0) {
+      alert("Preencha nome, comentário e avaliação.");
+      return;
+    }
+
+    fetch("salvar_comentario.php", {
+      method: "POST",
+      body: new URLSearchParams({
+        imagem: currentImg,
+        nome: nome,
+        comentario: comentario,
+        estrelas: currentStars
+      })
+    })
+    .then(r => r.text())
+    .then(resp => {
+      $("nomeUsuario").value = "";
+      $("novoComentario").value = "";
+      currentStars = 0;
+      document.querySelectorAll("#starRating i").forEach(s => s.classList.remove("selected"));
+      abrirModalComentario(currentImg);
+    });
+  });
+
+  // =================== ABRIR MODAL DE CATEGORIA ===================
+  document.querySelectorAll(".categoria-bloco").forEach(bloco => {
+    bloco.addEventListener("click", function(){
+      const categoria = bloco.dataset.category;
+      $("modalTitulo").innerText = categoria;
+
+      fetch("buscar_imagens.php?categoria=" + encodeURIComponent(categoria))
+        .then(r => r.json())
+        .then(lista => {
+          imagensCategoria = lista;
+          let html = "";
+          lista.forEach(img => {
+            html += `
+              <img src="${img}" class="modal-thumb" onclick="abrirModalComentario('${img}')">
+            `;
+          });
+          $("modalImagens").innerHTML = html;
+        });
+
+      $("categoriaModal").style.display = "flex";
+    });
+  });
+
+})();
+</script>
 
 </body>
 </html>
