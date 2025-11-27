@@ -63,24 +63,18 @@ function caminho_imagem($raw) {
     $raw = trim((string)$raw);
     if ($raw === '') return '';
 
-    // Se já contém /imagens/ em qualquer lugar, não adiciona
-    if (preg_match('#(^|/)imagens/#i', $raw)) {
-        return $raw;
-    }
-
-    // Se é uma URL completa
+    // Se for URL completa
     if (preg_match('#^https?://#i', $raw)) {
         return $raw;
     }
 
-    // Se começa com barra (por exemplo /uploads/teste.jpg)
-    if (strpos($raw, '/') === 0) {
-        return $raw;
-    }
+    // Remove duplicações de "imagens/"
+    $raw = ltrim($raw, '/');                 // remove "/" no começo
+    $raw = preg_replace('#^imagens/+?#i', '', $raw);  // remove "imagens/"
 
-    // Caso contrário, adiciona uma única vez
     return 'imagens/' . $raw;
 }
+
 
 ?>
 <!DOCTYPE html>
