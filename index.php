@@ -62,15 +62,26 @@ $categorias_result = $conn->query("SELECT DISTINCT categoria FROM trabalhos ORDE
 function caminho_imagem($raw) {
     $raw = trim((string)$raw);
     if ($raw === '') return '';
-    // já é URL absoluta?
-    if (preg_match('#^https?://#i', $raw)) return $raw;
-    // já começa com slash -> caminho absoluto
-    if (strpos($raw, '/') === 0) return $raw;
-    // já começa com "imagens/" provavelmente ok
-    if (strpos($raw, 'imagens/') === 0) return $raw;
-    // caso contrário prefixa "imagens/"
+
+    // Se já contém /imagens/ em qualquer lugar, não adiciona
+    if (preg_match('#(^|/)imagens/#i', $raw)) {
+        return $raw;
+    }
+
+    // Se é uma URL completa
+    if (preg_match('#^https?://#i', $raw)) {
+        return $raw;
+    }
+
+    // Se começa com barra (por exemplo /uploads/teste.jpg)
+    if (strpos($raw, '/') === 0) {
+        return $raw;
+    }
+
+    // Caso contrário, adiciona uma única vez
     return 'imagens/' . $raw;
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
