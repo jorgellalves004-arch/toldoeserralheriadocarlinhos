@@ -999,7 +999,7 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
       const categoria = bloco.dataset.category;
       $("modalTitulo").innerText = categoria;
 
-      fetch("get_fotos_categoria.php?categoria=" + encodeURIComponent(categoria))
+      fetch("buscar_imagens.php?categoria=" + encodeURIComponent(categoria))
         .then(r => r.json())
         .then(lista => {
           imagensCategoria = lista;
