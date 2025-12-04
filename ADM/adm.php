@@ -327,7 +327,7 @@ function gerarEstrelasHTML($media) {
     <tr><th>Imagem</th><th>Usuário</th><th>Comentário</th><th>Estrelas</th><th>Data</th><th>Ações</th></tr>
     <?php while($c = $comentarios->fetch_assoc()): ?>
       <tr>
-        <td><img src="../<?= htmlspecialchars($c['imagem']) ?>" width="80"></td>
+        <td><img src="<?= htmlspecialchars($c['imagem']) ?>" width="80"></td>
         <td><?= htmlspecialchars($c['nome_usuario']) ?></td>
         <td><?= htmlspecialchars($c['comentario']) ?></td>
         <td><?= $c['estrelas'] ?>⭐</td>
