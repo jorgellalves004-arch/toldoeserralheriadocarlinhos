@@ -102,7 +102,7 @@ $categorias_result = $conn->query("SELECT DISTINCT categoria FROM trabalhos ORDE
 .modal-close {
 
   position: absolute;
-  right: 18px; top: 20px;
+  right: 18px; top: 30px;
   font-size: 33px;
   border: none; background: none;
   color: #fff; cursor: pointer;
