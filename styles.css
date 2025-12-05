@@ -40,7 +40,7 @@ header{
 }
 /* Container à direita do header */
 .header-right {
-    position: relative;
+    position: absolute;
     top: 105%;
     right: 20px;
     transform: translateY(-50%);
@@ -625,7 +625,7 @@ header{
   border-radius: 15px;
   width: 80%;
   max-width: 900px;
-  height: 80vh; /* altura fixa */
+  height: 65vh; /* altura fixa */
   display: flex;
   flex-direction: column;
   position: relative;
