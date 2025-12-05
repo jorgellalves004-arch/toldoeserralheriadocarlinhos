@@ -583,13 +583,9 @@ document.querySelectorAll(".categoria-bloco").forEach((bloco) => {
     if (track && prevBtn && nextBtn) {
         // Calcula a quantidade de scroll baseado na largura visível do carrossel
         const getScrollAmount = () => {
-            // Em mobile, scrolla 80% da largura visível
-            // Em desktop, mantém o valor fixo ou usa uma porcentagem menor
             if (window.innerWidth <= 768) {
-                // Mobile: scrolla por 80% da largura do container
                 return track.parentElement.clientWidth * 0.8;
             } else {
-                // Desktop: usa valor fixo OU 50% da largura
                 return track.parentElement.clientWidth * 0.5;
             }
         };
@@ -606,43 +602,102 @@ document.querySelectorAll(".categoria-bloco").forEach((bloco) => {
         let isDragging = false;
         let startX;
         let scrollLeft;
+        let startY;
+        let isTap = false;
+        let tapStartTime;
         
         track.addEventListener('touchstart', (e) => {
             isDragging = true;
             startX = e.touches[0].pageX - track.offsetLeft;
+            startY = e.touches[0].pageY;
             scrollLeft = track.scrollLeft;
-            track.style.scrollBehavior = 'auto'; // Desativa smooth scroll durante arrasto
+            track.style.scrollBehavior = 'auto';
+            
+            // Marca como possível toque simples
+            isTap = true;
+            tapStartTime = Date.now();
         });
         
         track.addEventListener('touchmove', (e) => {
             if (!isDragging) return;
-            e.preventDefault();
+            
             const x = e.touches[0].pageX - track.offsetLeft;
-            const walk = (x - startX) * 2; // Multiplicador para velocidade do arrasto
-            track.scrollLeft = scrollLeft - walk;
+            const y = e.touches[0].pageY;
+            
+            // Verifica se houve movimento significativo
+            const deltaX = Math.abs(x - startX);
+            const deltaY = Math.abs(y - startY);
+            
+            // Se movimento horizontal for maior que 10px, considera como scroll
+            if (deltaX > 10 || deltaY > 10) {
+                isTap = false; // Não é um toque simples
+                e.preventDefault();
+                const walk = (x - startX) * 2;
+                track.scrollLeft = scrollLeft - walk;
+            }
         });
         
         track.addEventListener('touchend', () => {
             isDragging = false;
-            track.style.scrollBehavior = 'smooth'; // Reativa smooth scroll
+            track.style.scrollBehavior = 'smooth';
         });
     }
 
     // CLICAR NAS IMAGENS DO CARROSSEL PRINCIPAL ABRE MODAL DE CATEGORIA
     bloco.querySelectorAll(".carousel-item img").forEach((img) => {
-        img.addEventListener("click", () => {
+        let touchStartTime = 0;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isImageDragging = false;
+        
+        // Clique normal (desktop e mobile com click)
+        img.addEventListener("click", (e) => {
+            // Em mobile, verifica se não foi um scroll
+            if (window.innerWidth <= 768) {
+                const touchDuration = Date.now() - touchStartTime;
+                const deltaX = Math.abs(e.clientX - touchStartX);
+                const deltaY = Math.abs(e.clientY - touchStartY);
+                
+                // Se foi um scroll/swipe (movimento significativo), não abre modal
+                if (deltaX > 10 || deltaY > 10 || isImageDragging) {
+                    return;
+                }
+            }
+            
             const categoria = bloco.getAttribute("data-category") || "";
             abrirModalCategoria(categoria);
         });
         
-        // Adiciona suporte a toque para mobile
+        // Eventos de toque para mobile
         img.addEventListener("touchstart", (e) => {
-            e.preventDefault();
+            touchStartTime = Date.now();
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            isImageDragging = false;
+        });
+        
+        img.addEventListener("touchmove", (e) => {
+            const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
+            const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
+            
+            // Se houve movimento significativo, marca como arrasto
+            if (deltaX > 10 || deltaY > 10) {
+                isImageDragging = true;
+            }
         });
         
         img.addEventListener("touchend", (e) => {
-            const categoria = bloco.getAttribute("data-category") || "";
-            abrirModalCategoria(categoria);
+            const touchDuration = Date.now() - touchStartTime;
+            const deltaX = Math.abs(e.changedTouches[0].clientX - touchStartX);
+            const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY);
+            
+            // Apenas abre o modal se for um toque rápido (menos de 300ms)
+            // e com pouco movimento (menos de 10px)
+            if (touchDuration < 300 && deltaX < 10 && deltaY < 10 && !isImageDragging) {
+                e.preventDefault();
+                const categoria = bloco.getAttribute("data-category") || "";
+                abrirModalCategoria(categoria);
+            }
         });
     });
 });
