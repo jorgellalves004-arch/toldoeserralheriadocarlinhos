@@ -321,6 +321,52 @@ $categorias_result = $conn->query("SELECT DISTINCT categoria FROM trabalhos ORDE
   transform: scale(1.02);
 }
 
+/* CSS para melhorar a experiência de toque */
+@media (max-width: 768px) {
+    .carousel-track {
+        -webkit-overflow-scrolling: touch;
+        /* Permite scroll vertical e horizontal */
+        touch-action: pan-y pinch-zoom;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+    }
+    
+    .carousel-item {
+        scroll-snap-align: start;
+        flex-shrink: 0;
+    }
+    
+    .carousel-item img {
+        /* Permite eventos de toque passarem para o track */
+        pointer-events: auto;
+        /* Remove highlight de toque no iOS */
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        -webkit-touch-callout: none;
+    }
+    
+    /* Quando estiver arrastando, muda o cursor */
+    .carousel-track:active {
+        cursor: grabbing;
+    }
+}
+
+/* Remove seleção de texto durante interação */
+.carousel-track,
+.carousel-item,
+.carousel-item img {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Estilo para quando estiver arrastando */
+.carousel-track.dragging {
+    cursor: grabbing;
+    scroll-behavior: auto;
+}git status
+
 </style>
 
 </head>
@@ -606,40 +652,63 @@ document.querySelectorAll(".categoria-bloco").forEach((bloco) => {
         let isTap = false;
         let tapStartTime;
         
-        track.addEventListener('touchstart', (e) => {
+        // Função para iniciar o drag
+        const startDrag = (e) => {
             isDragging = true;
-            startX = e.touches[0].pageX - track.offsetLeft;
-            startY = e.touches[0].pageY;
+            startX = (e.touches ? e.touches[0].pageX : e.pageX) - track.offsetLeft;
+            startY = e.touches ? e.touches[0].pageY : e.pageY;
             scrollLeft = track.scrollLeft;
             track.style.scrollBehavior = 'auto';
             
             // Marca como possível toque simples
             isTap = true;
             tapStartTime = Date.now();
-        });
+        };
         
-        track.addEventListener('touchmove', (e) => {
+        // Função para mover durante o drag
+        const duringDrag = (e) => {
             if (!isDragging) return;
             
-            const x = e.touches[0].pageX - track.offsetLeft;
-            const y = e.touches[0].pageY;
+            const x = (e.touches ? e.touches[0].pageX : e.pageX) - track.offsetLeft;
+            const y = e.touches ? e.touches[0].pageY : e.pageY;
             
             // Verifica se houve movimento significativo
             const deltaX = Math.abs(x - startX);
             const deltaY = Math.abs(y - startY);
             
-            // Se movimento horizontal for maior que 10px, considera como scroll
-            if (deltaX > 10 || deltaY > 10) {
+            // Se movimento horizontal for maior que 5px, considera como scroll
+            if (deltaX > 5 || deltaY > 5) {
                 isTap = false; // Não é um toque simples
-                e.preventDefault();
+                
+                // Previne comportamento padrão apenas em mobile
+                if (e.touches) {
+                    e.preventDefault();
+                }
+                
                 const walk = (x - startX) * 2;
                 track.scrollLeft = scrollLeft - walk;
             }
-        });
+        };
         
-        track.addEventListener('touchend', () => {
+        // Função para terminar o drag
+        const endDrag = () => {
             isDragging = false;
             track.style.scrollBehavior = 'smooth';
+        };
+        
+        // Adiciona eventos ao track
+        track.addEventListener('touchstart', startDrag);
+        track.addEventListener('mousedown', startDrag);
+        
+        track.addEventListener('touchmove', duringDrag);
+        document.addEventListener('mousemove', duringDrag);
+        
+        track.addEventListener('touchend', endDrag);
+        document.addEventListener('mouseup', endDrag);
+        
+        // Remove seleção de texto durante arrasto
+        track.addEventListener('selectstart', (e) => {
+            if (isDragging) e.preventDefault();
         });
     }
 
@@ -649,23 +718,15 @@ document.querySelectorAll(".categoria-bloco").forEach((bloco) => {
         let touchStartX = 0;
         let touchStartY = 0;
         let isImageDragging = false;
+        let isImageTouched = false;
         
-        // Clique normal (desktop e mobile com click)
+        // Clique normal (desktop)
         img.addEventListener("click", (e) => {
-            // Em mobile, verifica se não foi um scroll
-            if (window.innerWidth <= 768) {
-                const touchDuration = Date.now() - touchStartTime;
-                const deltaX = Math.abs(e.clientX - touchStartX);
-                const deltaY = Math.abs(e.clientY - touchStartY);
-                
-                // Se foi um scroll/swipe (movimento significativo), não abre modal
-                if (deltaX > 10 || deltaY > 10 || isImageDragging) {
-                    return;
-                }
+            // Em mobile, o clique será tratado pelo touchend
+            if (window.innerWidth > 768) {
+                const categoria = bloco.getAttribute("data-category") || "";
+                abrirModalCategoria(categoria);
             }
-            
-            const categoria = bloco.getAttribute("data-category") || "";
-            abrirModalCategoria(categoria);
         });
         
         // Eventos de toque para mobile
@@ -674,19 +735,27 @@ document.querySelectorAll(".categoria-bloco").forEach((bloco) => {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
             isImageDragging = false;
+            isImageTouched = true;
         });
         
         img.addEventListener("touchmove", (e) => {
+            if (!isImageTouched) return;
+            
             const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
             const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
             
             // Se houve movimento significativo, marca como arrasto
             if (deltaX > 10 || deltaY > 10) {
                 isImageDragging = true;
+                
+                // Permite que o scroll do track continue funcionando
+                // Não previne o comportamento padrão para permitir scroll
             }
         });
         
         img.addEventListener("touchend", (e) => {
+            if (!isImageTouched) return;
+            
             const touchDuration = Date.now() - touchStartTime;
             const deltaX = Math.abs(e.changedTouches[0].clientX - touchStartX);
             const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY);
@@ -698,6 +767,13 @@ document.querySelectorAll(".categoria-bloco").forEach((bloco) => {
                 const categoria = bloco.getAttribute("data-category") || "";
                 abrirModalCategoria(categoria);
             }
+            
+            isImageTouched = false;
+        });
+        
+        // Cancela o toque se sair da imagem
+        img.addEventListener("touchcancel", () => {
+            isImageTouched = false;
         });
     });
 });
