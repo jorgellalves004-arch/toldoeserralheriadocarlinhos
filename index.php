@@ -80,10 +80,10 @@ $categorias_result = $conn->query("SELECT DISTINCT categoria FROM trabalhos ORDE
   to { opacity: 1; transform: scale(1); }
 }
 
-.modal-content {margin-top: -50px;
+.modal-content {margin-top: -45px;
   width: 95%; max-width: 1000px; max-height: 90vh;
 
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(16, 15, 15, 0.12);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 16px;
@@ -100,9 +100,10 @@ $categorias_result = $conn->query("SELECT DISTINCT categoria FROM trabalhos ORDE
 }
 
 .modal-close {
+
   position: absolute;
   right: 18px; top: 14px;
-  font-size: 26px;
+  font-size: 33px;
   border: none; background: none;
   color: #fff; cursor: pointer;
   transition: transform .2s, color .2s;
@@ -573,25 +574,78 @@ if ($categorias_result && $categorias_result->num_rows > 0) {
         .catch((err) => console.error("Erro ao registrar contato:", err));
     });
   }
-
-  // =================== CARROSSEL ===================
-  document.querySelectorAll(".categoria-bloco").forEach((bloco) => {
+// =================== CARROSSEL ===================
+document.querySelectorAll(".categoria-bloco").forEach((bloco) => {
     const track = bloco.querySelector(".carousel-track");
-    bloco.querySelector(".prev-btn")?.addEventListener("click", () =>
-      track.scrollBy({ left: -416.5385, behavior: "smooth" })
-    );
-    bloco.querySelector(".next-btn")?.addEventListener("click", () =>
-      track.scrollBy({ left: 416.5385, behavior: "smooth" })
-    );
+    const prevBtn = bloco.querySelector(".prev-btn");
+    const nextBtn = bloco.querySelector(".next-btn");
+    
+    if (track && prevBtn && nextBtn) {
+        // Calcula a quantidade de scroll baseado na largura visível do carrossel
+        const getScrollAmount = () => {
+            // Em mobile, scrolla 80% da largura visível
+            // Em desktop, mantém o valor fixo ou usa uma porcentagem menor
+            if (window.innerWidth <= 768) {
+                // Mobile: scrolla por 80% da largura do container
+                return track.parentElement.clientWidth * 0.8;
+            } else {
+                // Desktop: usa valor fixo OU 50% da largura
+                return track.parentElement.clientWidth * 0.5;
+            }
+        };
+        
+        prevBtn.addEventListener("click", () => {
+            track.scrollBy({ left: -getScrollAmount(), behavior: "smooth" });
+        });
+        
+        nextBtn.addEventListener("click", () => {
+            track.scrollBy({ left: getScrollAmount(), behavior: "smooth" });
+        });
+        
+        // Adiciona detecção de toque para mobile
+        let isDragging = false;
+        let startX;
+        let scrollLeft;
+        
+        track.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].pageX - track.offsetLeft;
+            scrollLeft = track.scrollLeft;
+            track.style.scrollBehavior = 'auto'; // Desativa smooth scroll durante arrasto
+        });
+        
+        track.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const x = e.touches[0].pageX - track.offsetLeft;
+            const walk = (x - startX) * 2; // Multiplicador para velocidade do arrasto
+            track.scrollLeft = scrollLeft - walk;
+        });
+        
+        track.addEventListener('touchend', () => {
+            isDragging = false;
+            track.style.scrollBehavior = 'smooth'; // Reativa smooth scroll
+        });
+    }
 
     // CLICAR NAS IMAGENS DO CARROSSEL PRINCIPAL ABRE MODAL DE CATEGORIA
     bloco.querySelectorAll(".carousel-item img").forEach((img) => {
-      img.addEventListener("click", () => {
-        const categoria = bloco.getAttribute("data-category") || "";
-        abrirModalCategoria(categoria);
-      });
+        img.addEventListener("click", () => {
+            const categoria = bloco.getAttribute("data-category") || "";
+            abrirModalCategoria(categoria);
+        });
+        
+        // Adiciona suporte a toque para mobile
+        img.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+        });
+        
+        img.addEventListener("touchend", (e) => {
+            const categoria = bloco.getAttribute("data-category") || "";
+            abrirModalCategoria(categoria);
+        });
     });
-  });
+});
 
   // =================== BUSCA ===================
   const inputBusca = document.getElementById("buscarServico");
