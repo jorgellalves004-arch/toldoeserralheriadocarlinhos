@@ -74,6 +74,9 @@ $categorias_result = $conn->query("SELECT DISTINCT categoria FROM trabalhos ORDE
   z-index: 9999; padding: 25px;
   animation: fadeIn .25s ease-out forwards;
 }
+.carousel-item img {
+    touch-action: pan-y;
+}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.96); }
@@ -326,7 +329,9 @@ $categorias_result = $conn->query("SELECT DISTINCT categoria FROM trabalhos ORDE
     .carousel-track {
         -webkit-overflow-scrolling: touch;
         /* Permite scroll vertical e horizontal */
-        touch-action: pan-y pinch-zoom;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+
         overflow-x: auto;
         overflow-y: hidden;
         scroll-snap-type: x mandatory;
@@ -677,17 +682,14 @@ document.querySelectorAll(".categoria-bloco").forEach((bloco) => {
             const deltaY = Math.abs(y - startY);
             
             // Se movimento horizontal for maior que 5px, considera como scroll
-            if (deltaX > 5 || deltaY > 5) {
-                isTap = false; // Não é um toque simples
-                
-                // Previne comportamento padrão apenas em mobile
-                if (e.touches) {
-                    e.preventDefault();
-                }
-                
-                const walk = (x - startX) * 2;
-                track.scrollLeft = scrollLeft - walk;
+            if (deltaX > deltaY && deltaX > 10) {
+                  // movimento horizontal → controla o carrossel
+                  e.preventDefault();
+                  const walk = (x - startX) * 2;
+                  track.scrollLeft = scrollLeft - walk;
             }
+              // se for vertical → NÃO FAZ NADA → deixa o navegador rolar
+
         };
         
         // Função para terminar o drag
@@ -745,12 +747,10 @@ document.querySelectorAll(".categoria-bloco").forEach((bloco) => {
             const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
             
             // Se houve movimento significativo, marca como arrasto
-            if (deltaX > 10 || deltaY > 10) {
-                isImageDragging = true;
-                
-                // Permite que o scroll do track continue funcionando
-                // Não previne o comportamento padrão para permitir scroll
-            }
+            if (deltaX > deltaY && deltaX > 10) {
+                  isImageDragging = true;
+              }
+
         });
         
         img.addEventListener("touchend", (e) => {
